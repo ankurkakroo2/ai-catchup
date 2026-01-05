@@ -1,0 +1,41 @@
+{
+  "name": "ai-catchup",
+  "version": "1.0.0",
+  "description": "Terminal-based CLI for curated AI news from premium sources",
+  "main": "src/index.js",
+  "type": "module",
+  "bin": {
+    "ai-catchup": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "esbuild src/index.js --bundle --platform=node --format=esm --outfile=dist/index.js --loader:.js=jsx --external:ink --external:react --external:commander --external:chalk --external:date-fns --external:conf --external:rss-parser --external:axios --external:node-cache --external:ink-spinner",
+    "start": "npm run build && node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "keywords": [
+    "ai",
+    "news",
+    "cli",
+    "terminal",
+    "developer-tools"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.1.0",
+    "ink": "^4.4.1",
+    "ink-spinner": "^5.0.0",
+    "react": "^18.2.0",
+    "axios": "^1.6.5",
+    "rss-parser": "^3.13.0",
+    "chalk": "^5.3.0",
+    "date-fns": "^3.0.6",
+    "conf": "^12.0.0",
+    "node-cache": "^5.1.2"
+  },
+  "devDependencies": {
+    "esbuild": "^0.19.11",
+    "eslint": "^8.56.0",
+    "prettier": "^3.1.1"
+  }
+}
