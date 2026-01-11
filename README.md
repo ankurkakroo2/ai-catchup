@@ -2,6 +2,9 @@
 
 A fast, terminal-based CLI tool for developers to stay updated with high-quality AI news from curated sources.
 
+<img width="2554" height="1616" alt="image" src="https://github.com/user-attachments/assets/b49d1fe1-31ca-466c-b5d2-4951d32684e6" />
+
+
 ## Features
 
 - 📰 **Curated AI News** - Get the latest AI news from premium sources (smol.ai, Reddit)
