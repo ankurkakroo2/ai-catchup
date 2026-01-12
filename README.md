@@ -44,17 +44,61 @@ ai-catchup --help
 ### Keyboard Controls
 
 #### News List View
+
 - `↑` / `↓` - Navigate through news items
 - `Enter` - Open selected article
 - `Q` - Quit application
 - `Ctrl+C` - Force quit
 
 #### Article View
+
 - `↑` / `↓` - Scroll through content
 - `ESC` or `Q` - Go back to list
 - `Ctrl+C` - Force quit
 
-## Architecture
+## Testing
+
+See [TESTING_STRATEGY.md](./TESTING_STRATEGY.md) for comprehensive testing strategy.
+
+### Integration Tests
+
+Integration tests verify CLI commands and data layer work correctly without UI.
+
+```bash
+npm run test:run -- tests/integration/cli.test.js
+```
+
+Current coverage:
+
+- CLI commands (clear-cache, config, version, help)
+- Data layer (NewsAggregator, ConfigService, CacheService)
+- Source adapters (SmolSource, HackerNewsSource, RedditSource)
+
+### Architecture
+
+```
+ai-catchup/
+├── src/
+│   ├── index.js                 # CLI entry point
+│   ├── cli/
+│   │   ├── App.js           # Main app component
+│   │   ├── NewsList.js      # News list view
+│   │   └── ArticleView.js   # Article detail view
+│   ├── sources/                 # News source adapters
+│   │   ├── base.js              # Base source class
+│   │   ├── smol.js              # smol.ai adapter
+│   │   ├── x.js                # X (Twitter) adapter
+│   │   ├── rss.js              # Generic RSS adapter
+│   │   ├── hackernews.js        # HackerNews adapter
+│   │   ├── reddit.js            # Reddit adapter
+│   │   └── index.js           # Source registry
+│   ├── services/
+│   │   ├── aggregator.js        # News aggregation logic
+│   │   ├── cache.js             # Caching service
+│   │   └── config.js            # Configuration management
+│   └── utils/
+└── package.json
+```
 
 ```
 ai-catchup/
@@ -148,6 +192,7 @@ Configuration is stored in `~/.config/ai-catchup/config.json`:
 ## Cache
 
 News items are cached locally in `~/.ai-catchup/cache/` for:
+
 - Faster loading
 - Offline access
 - Reduced API calls
