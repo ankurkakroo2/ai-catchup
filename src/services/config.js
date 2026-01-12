@@ -1,4 +1,4 @@
-import Conf from "conf";
+import Conf from 'conf';
 
 /**
  * Configuration service
@@ -7,12 +7,12 @@ import Conf from "conf";
 export class ConfigService {
   constructor() {
     this.config = new Conf({
-      projectName: "ai-catchup",
+      projectName: 'ai-catchup',
       defaults: {
         sources: {
           smol: {
             enabled: true,
-            url: "https://news.smol.ai/feed.xml",
+            url: 'https://news.smol.ai/feed.xml',
           },
           x: {
             enabled: false,
@@ -25,11 +25,11 @@ export class ConfigService {
             minPoints: 5,
             maxAgeHours: 72,
             limit: 20,
-            queryTerms: ["AI", "LLM"],
+            queryTerms: ['AI', 'LLM'],
           },
           reddit: {
             enabled: false,
-            subreddits: ["MachineLearning", "artificial"],
+            subreddits: ['MachineLearning', 'artificial'],
             minUpvotes: 10,
             maxAgeHours: 72,
             limit: 20,
@@ -94,7 +94,7 @@ export class ConfigService {
    * @returns {Array<string>}
    */
   getEnabledSources() {
-    const sources = this.config.get("sources");
-    return Object.keys(sources).filter((name) => sources[name].enabled);
+    const sources = this.config.get('sources');
+    return Object.keys(sources).filter(name => sources[name].enabled);
   }
 }

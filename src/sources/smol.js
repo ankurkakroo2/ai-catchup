@@ -29,7 +29,7 @@ export class SmolSource extends BaseSource {
     try {
       const feed = await this.parser.parseURL(this.feedUrl);
 
-      return feed.items.map((item) => {
+      return feed.items.map(item => {
         // Generate a unique ID from the link
         const id = crypto
           .createHash('md5')
@@ -48,7 +48,9 @@ export class SmolSource extends BaseSource {
           pubDate: item.pubDate ? new Date(item.pubDate) : new Date(),
           source: this.name,
           tags,
-          content: this.cleanContent(item.content || item['content:encoded'] || item.description || ''),
+          content: this.cleanContent(
+            item.content || item['content:encoded'] || item.description || ''
+          ),
         };
       });
     } catch (error) {

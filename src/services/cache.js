@@ -94,7 +94,7 @@ export class CacheService {
   async clear() {
     try {
       const files = await fs.readdir(this.cacheDir);
-      await Promise.all(files.map((file) => fs.unlink(path.join(this.cacheDir, file))));
+      await Promise.all(files.map(file => fs.unlink(path.join(this.cacheDir, file))));
     } catch (error) {
       console.error('Error clearing cache:', error.message);
     }

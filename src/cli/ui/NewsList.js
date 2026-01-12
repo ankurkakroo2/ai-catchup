@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
 import Spinner from 'ink-spinner';
-import chalk from 'chalk';
 import { formatDistanceToNow } from 'date-fns';
 
 /**
@@ -13,9 +12,9 @@ export function NewsList({ news, onSelectArticle, isLoading, error }) {
   // Handle keyboard input
   useInput((input, key) => {
     if (key.upArrow) {
-      setSelectedIndex((prev) => Math.max(0, prev - 1));
+      setSelectedIndex(prev => Math.max(0, prev - 1));
     } else if (key.downArrow) {
-      setSelectedIndex((prev) => Math.min(news.length - 1, prev + 1));
+      setSelectedIndex(prev => Math.min(news.length - 1, prev + 1));
     } else if (key.return) {
       if (news[selectedIndex]) {
         onSelectArticle(news[selectedIndex]);
@@ -35,8 +34,7 @@ export function NewsList({ news, onSelectArticle, isLoading, error }) {
           <Text>
             <Text color="cyan">
               <Spinner type="dots" />
-            </Text>
-            {' '}
+            </Text>{' '}
             <Text>Fetching latest AI news...</Text>
           </Text>
         </Box>
@@ -67,13 +65,7 @@ export function NewsList({ news, onSelectArticle, isLoading, error }) {
   return (
     <Box flexDirection="column">
       {/* Header */}
-      <Box
-        borderStyle="round"
-        borderColor="cyan"
-        paddingX={2}
-        paddingY={0}
-        marginBottom={1}
-      >
+      <Box borderStyle="round" borderColor="cyan" paddingX={2} paddingY={0} marginBottom={1}>
         <Text bold color="cyan">
           AI CatchUp - Latest AI News ({news.length} items)
         </Text>
@@ -82,26 +74,13 @@ export function NewsList({ news, onSelectArticle, isLoading, error }) {
       {/* News items */}
       <Box flexDirection="column" paddingX={1}>
         {news.map((item, index) => (
-          <NewsItem
-            key={item.id}
-            item={item}
-            isSelected={index === selectedIndex}
-            index={index}
-          />
+          <NewsItem key={item.id} item={item} isSelected={index === selectedIndex} index={index} />
         ))}
       </Box>
 
       {/* Footer */}
-      <Box
-        marginTop={1}
-        paddingX={2}
-        paddingY={1}
-        borderStyle="round"
-        borderColor="gray"
-      >
-        <Text dimColor>
-          ↑↓ Navigate • Enter to read • Q to quit
-        </Text>
+      <Box marginTop={1} paddingX={2} paddingY={1} borderStyle="round" borderColor="gray">
+        <Text dimColor>↑↓ Navigate • Enter to read • Q to quit</Text>
       </Box>
     </Box>
   );
@@ -115,16 +94,10 @@ function NewsItem({ item, isSelected, index }) {
     addSuffix: true,
   });
 
-  const bgColor = isSelected ? 'bgBlue' : undefined;
   const pointer = isSelected ? '▶ ' : '  ';
 
   return (
-    <Box
-      flexDirection="column"
-      paddingX={1}
-      paddingY={0}
-      marginBottom={1}
-    >
+    <Box flexDirection="column" paddingX={1} paddingY={0} marginBottom={1}>
       <Box>
         <Text color={isSelected ? 'cyan' : 'white'} bold={isSelected}>
           {pointer}

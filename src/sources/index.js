@@ -1,8 +1,8 @@
-import { SmolSource } from "./smol.js";
-import { XSource } from "./x.js";
-import { RSSSource } from "./rss.js";
-import { HackerNewsSource } from "./hackernews.js";
-import { RedditSource } from "./reddit.js";
+import { SmolSource } from './smol.js';
+import { XSource } from './x.js';
+import { RSSSource } from './rss.js';
+import { HackerNewsSource } from './hackernews.js';
+import { RedditSource } from './reddit.js';
 
 /**
  * Available news sources

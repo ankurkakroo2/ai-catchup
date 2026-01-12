@@ -1,23 +1,23 @@
-import axios from "axios";
-import crypto from "crypto";
-import { BaseSource } from "./base.js";
+import axios from 'axios';
+import crypto from 'crypto';
+import { BaseSource } from './base.js';
 
 function textIncludesAny(text, terms = []) {
   if (!terms || terms.length === 0) return true;
   const lower = text.toLowerCase();
-  return terms.some((term) => lower.includes(term.toLowerCase()));
+  return terms.some(term => lower.includes(term.toLowerCase()));
 }
 
 function extractDomain(link) {
   try {
     const u = new URL(link);
-    return u.hostname.replace(/^www\./, "");
+    return u.hostname.replace(/^www\./, '');
   } catch (e) {
-    return "";
+    return '';
   }
 }
 
-function parseNitterHtml(html, handle) {
+function parseNitterHtml(html, _handle) {
   const items = [];
 
   // Parse tweets from Nitter's HTML structure
@@ -29,8 +29,7 @@ function parseNitterHtml(html, handle) {
     /<div class="tweet[^"]*"[^>]*>([\s\S]*?)<\/div>\s*<div class="tweet-content[^"]*"[^>]*>([\s\S]*?)<\/div>/gi;
   const contentRegex = /data-text="([^"]*)"/;
   const linkRegex = /<a class="tweet-link"[^>]*href="([^"]*)"/;
-  const dateRegex =
-    /<span class="tweet-date"[^>]*>[\s\S]*?href="([^"]*)"[^>]*>([^<]*)<\/a>/;
+  const dateRegex = /<span class="tweet-date"[^>]*>[\s\S]*?href="([^"]*)"[^>]*>([^<]*)<\/a>/;
 
   let match;
   while ((match = tweetRegex.exec(html)) !== null) {
@@ -40,29 +39,29 @@ function parseNitterHtml(html, handle) {
 
     if (contentMatch) {
       const content = contentMatch[1]
-        .replace(/&amp;/g, "&")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
         .replace(/&quot;/g, '"')
         .replace(/&#39;/g, "'")
-        .replace(/<[^>]+>/g, " ")
-        .replace(/\s+/g, " ")
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
         .trim();
 
-      let link = linkMatch ? linkMatch[1] : "";
+      let link = linkMatch ? linkMatch[1] : '';
       let pubDate = new Date();
-      let dateStr = "";
+      let dateStr = '';
 
       if (dateMatch) {
         dateStr = dateMatch[2].trim();
         try {
           // Try to parse relative dates like "2h ago", "3d ago"
           const num = parseInt(dateStr);
-          if (dateStr.includes("h")) {
+          if (dateStr.includes('h')) {
             pubDate = new Date(Date.now() - num * 3600000);
-          } else if (dateStr.includes("d")) {
+          } else if (dateStr.includes('d')) {
             pubDate = new Date(Date.now() - num * 86400000);
-          } else if (dateStr.includes("m")) {
+          } else if (dateStr.includes('m')) {
             pubDate = new Date(Date.now() - num * 60000);
           } else {
             pubDate = new Date(dateStr);
@@ -72,12 +71,12 @@ function parseNitterHtml(html, handle) {
         }
       }
 
-      if (link && !link.startsWith("http")) {
-        link = "https://nitter.net" + link;
+      if (link && !link.startsWith('http')) {
+        link = 'https://nitter.net' + link;
       }
 
       items.push({
-        title: content.slice(0, 100) + (content.length > 100 ? "..." : ""),
+        title: content.slice(0, 100) + (content.length > 100 ? '...' : ''),
         description: content,
         link: link,
         pubDate: pubDate,
@@ -90,13 +89,13 @@ function parseNitterHtml(html, handle) {
 
 export class XSource extends BaseSource {
   constructor(config = {}) {
-    super("X", config);
+    super('X', config);
     this.handles = config.handles || [];
     this.mirrorBases = config.mirrorBases || [
-      "https://nitter.net",
-      "https://nitter.weblibre.org",
-      "https://nitter.privacydev.net",
-      "https://nitter.moomoo.me",
+      'https://nitter.net',
+      'https://nitter.weblibre.org',
+      'https://nitter.privacydev.net',
+      'https://nitter.moomoo.me',
     ];
     this.limitPerHandle = config.limitPerHandle || 2;
     this.overallLimit = config.overallLimit || 8;
@@ -107,11 +106,7 @@ export class XSource extends BaseSource {
   }
 
   isConfigured() {
-    return (
-      this.enabled !== false &&
-      this.handles.length > 0 &&
-      this.mirrorBases.length > 0
-    );
+    return this.enabled !== false && this.handles.length > 0 && this.mirrorBases.length > 0;
   }
 
   async fetchNews() {
@@ -151,15 +146,11 @@ export class XSource extends BaseSource {
       try {
         const htmlItems = await this.fetchHtml(htmlUrl, handle);
         if (htmlItems.length > 0) {
-          console.log(
-            `X @${handle}: got ${htmlItems.length} items via HTML from ${base}`,
-          );
+          console.log(`X @${handle}: got ${htmlItems.length} items via HTML from ${base}`);
           return htmlItems;
         }
       } catch (e) {
-        console.log(
-          `X @${handle}: ${base} HTML failed - ${e.message.slice(0, 30)}`,
-        );
+        console.log(`X @${handle}: ${base} HTML failed - ${e.message.slice(0, 30)}`);
       }
     }
 
@@ -170,7 +161,7 @@ export class XSource extends BaseSource {
     try {
       const response = await axios.get(url, {
         timeout: this.timeout,
-        validateStatus: (status) => status === 200,
+        validateStatus: status => status === 200,
       });
 
       if (!response.data || response.data.length < 50) {
@@ -188,17 +179,16 @@ export class XSource extends BaseSource {
           /<title><!\[CDATA\[([^\]]*)\]\]><\/title>/.exec(itemXml) ||
           /<title>([^<]+)<\/title>/.exec(itemXml);
         const descMatch =
-          /<description><!\[CDATA\[([^\]]*)\]\]><\/description>/.exec(
-            itemXml,
-          ) || /<description>([^<]+)<\/description>/.exec(itemXml);
+          /<description><!\[CDATA\[([^\]]*)\]\]><\/description>/.exec(itemXml) ||
+          /<description>([^<]+)<\/description>/.exec(itemXml);
         const linkMatch = /<link>([^<]+)<\/link>/.exec(itemXml);
         const dateMatch = /<pubDate>([^<]+)<\/pubDate>/.exec(itemXml);
 
         if (titleMatch) {
           items.push({
             title: titleMatch[1],
-            description: descMatch ? descMatch[1] : "",
-            link: linkMatch ? linkMatch[1] : "",
+            description: descMatch ? descMatch[1] : '',
+            link: linkMatch ? linkMatch[1] : '',
             pubDate: dateMatch ? new Date(dateMatch[1]) : new Date(),
           });
         }
@@ -213,10 +203,9 @@ export class XSource extends BaseSource {
   async fetchHtml(url, handle) {
     const response = await axios.get(url, {
       timeout: this.timeout,
-      validateStatus: (status) => status === 200,
+      validateStatus: status => status === 200,
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
       },
     });
 
@@ -228,9 +217,9 @@ export class XSource extends BaseSource {
   }
 
   mapItem(item, handle) {
-    const title = item.title || "";
-    const description = item.description || "";
-    const link = item.link || "";
+    const title = item.title || '';
+    const description = item.description || '';
+    const link = item.link || '';
     const pubDate = item.pubDate ? new Date(item.pubDate) : new Date();
     const ageHours = (Date.now() - pubDate.getTime()) / 3600000;
 
@@ -242,20 +231,20 @@ export class XSource extends BaseSource {
     if (textIncludesAny(combined, this.keywordsBlock)) return null;
 
     const id = crypto
-      .createHash("md5")
+      .createHash('md5')
       .update(link || title || handle)
-      .digest("hex")
+      .digest('hex')
       .substring(0, 10);
     const domain = extractDomain(link);
 
     return {
       id,
-      title: title || "Untitled",
+      title: title || 'Untitled',
       description,
       link,
       pubDate,
       source: `X @${handle}`,
-      tags: ["x", handle, domain].filter(Boolean),
+      tags: ['x', handle, domain].filter(Boolean),
       content: description || title,
       domain,
     };

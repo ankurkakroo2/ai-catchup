@@ -15,9 +15,9 @@ export function ArticleView({ article, onBack }) {
     if (key.escape) {
       onBack();
     } else if (key.upArrow) {
-      setScrollOffset((prev) => Math.max(0, prev - 1));
+      setScrollOffset(prev => Math.max(0, prev - 1));
     } else if (key.downArrow) {
-      setScrollOffset((prev) => prev + 1);
+      setScrollOffset(prev => prev + 1);
     } else if (input === 'q' || input === 'Q') {
       onBack();
     }
@@ -47,13 +47,7 @@ export function ArticleView({ article, onBack }) {
   return (
     <Box flexDirection="column">
       {/* Header */}
-      <Box
-        borderStyle="round"
-        borderColor="cyan"
-        paddingX={2}
-        paddingY={0}
-        marginBottom={1}
-      >
+      <Box borderStyle="round" borderColor="cyan" paddingX={2} paddingY={0} marginBottom={1}>
         <Text bold color="cyan">
           {article.title}
         </Text>
@@ -64,9 +58,7 @@ export function ArticleView({ article, onBack }) {
         <Text dimColor>
           Source: {article.source} • Published {timeAgo}
         </Text>
-        {article.tags.length > 0 && (
-          <Text dimColor>Tags: {article.tags.join(', ')}</Text>
-        )}
+        {article.tags.length > 0 && <Text dimColor>Tags: {article.tags.join(', ')}</Text>}
         <Text color="blue" underline>
           {article.link}
         </Text>
@@ -101,15 +93,8 @@ export function ArticleView({ article, onBack }) {
       </Box>
 
       {/* Footer */}
-      <Box
-        paddingX={2}
-        paddingY={1}
-        borderStyle="round"
-        borderColor="gray"
-      >
-        <Text dimColor>
-          ↑↓ Scroll • ESC or Q to go back • Ctrl+C to quit
-        </Text>
+      <Box paddingX={2} paddingY={1} borderStyle="round" borderColor="gray">
+        <Text dimColor>↑↓ Scroll • ESC or Q to go back • Ctrl+C to quit</Text>
       </Box>
     </Box>
   );

@@ -35,9 +35,7 @@ export class NewsAggregator {
 
     // Fetch from sources
     const enabledSources = this.config.getEnabledSources();
-    const newsPromises = enabledSources.map((sourceName) =>
-      this.fetchFromSource(sourceName)
-    );
+    const newsPromises = enabledSources.map(sourceName => this.fetchFromSource(sourceName));
 
     const results = await Promise.all(newsPromises);
     const allNews = results.flat();
@@ -79,9 +77,7 @@ export class NewsAggregator {
    * @returns {Array<NewsItem>}
    */
   sortAndLimit(news, limit) {
-    return news
-      .sort((a, b) => b.pubDate - a.pubDate)
-      .slice(0, limit);
+    return news.sort((a, b) => b.pubDate - a.pubDate).slice(0, limit);
   }
 
   /**
@@ -95,13 +91,11 @@ export class NewsAggregator {
 
     const keywordArray = Array.isArray(keywords)
       ? keywords
-      : keywords.split(',').map((k) => k.trim());
+      : keywords.split(',').map(k => k.trim());
 
-    return news.filter((item) => {
+    return news.filter(item => {
       const searchText = `${item.title} ${item.description} ${item.tags.join(' ')}`.toLowerCase();
-      return keywordArray.some((keyword) =>
-        searchText.includes(keyword.toLowerCase())
-      );
+      return keywordArray.some(keyword => searchText.includes(keyword.toLowerCase()));
     });
   }
 
