@@ -1,0 +1,154 @@
+{
+  "cache": {
+    "ttl": 1800000
+  },
+  "global": {
+    "limit": 20,
+    "perSourceCap": 6,
+    "dedup": true,
+    "hardBlock": [
+      "funding",
+      "earnings",
+      "acquisition",
+      "hiring",
+      "job",
+      "press",
+      "podcast",
+      "politics",
+      "giveaway",
+      "meme"
+    ]
+  },
+  "sources": [
+    {
+      "name": "smol",
+      "type": "smol",
+      "enabled": true,
+      "feedUrl": "https://news.smol.ai/rss.xml",
+      "maxAgeHours": 72,
+      "limit": 6
+    },
+
+    {
+      "name": "reddit",
+      "type": "reddit",
+      "enabled": true,
+      "subreddits": [
+        "ClaudeAI",
+        "LocalLLaMA",
+        "MachineLearning",
+        "OpenAI",
+        "LangChain",
+        "ArtificialInteligence",
+        "ChatGPT",
+        "Cursor",
+        "SideProject",
+        "LearnMachineLearning"
+      ],
+      "allowedFlairs": [
+        "Research",
+        "Project",
+        "Release",
+        "Show",
+        "Discussion",
+        "Tutorial",
+        "Guide"
+      ],
+      "minUpvotes": 75,
+      "maxAgeHours": 72,
+      "limit": 6,
+      "keywordsBlock": [
+        "hiring",
+        "funding",
+        "press",
+        "survey",
+        "giveaway",
+        "meme",
+        "politics",
+        "drama",
+        "AMA"
+      ]
+    },
+    {
+      "name": "x",
+      "type": "x",
+      "enabled": false,
+      "reason": "Public X/Twitter RSS feeds are blocked by Twitter. Nitter instances return 403/404 or require CAPTCHA. X source requires Twitter API authentication to work.",
+      "handles": [
+        "GeoffreyHuntley",
+        "adamdotdev",
+        "anomalyco",
+        "DarioAmodei",
+        "opencode",
+        "thdxrd",
+        "Smol_AI",
+        "clawdbot",
+        "pepicrft",
+        "adocomplete",
+        "arohan",
+        "infoxiao",
+        "rakyll",
+        "The_Whole_Daisy",
+        "Steve_Yegge",
+        "steipete",
+        "aiDotEngineer",
+        "the2ndfloorguy",
+        "charles_maddock",
+        "JonathanRoss321",
+        "bcherny",
+        "comet",
+        "GroqInc",
+        "karpathy",
+        "simonw",
+        "swyx",
+        "ylecun",
+        "cognition_labs",
+        "AnthropicAI",
+        "OpenAI"
+      ],
+      "mirrorBases": [
+        "https://nitter.net",
+        "https://nitter.weblibre.org",
+        "https://nitter.privacydev.net",
+        "https://nitter.moomoo.me"
+      ],
+      "limitPerHandle": 2,
+      "overallLimit": 10,
+      "maxAgeHours": 48,
+      "keywordsAllow": [
+        "LLM",
+        "inference",
+        "agents",
+        "retrieval",
+        "vector",
+        "RAG",
+        "tokenizer",
+        "quantization",
+        "compiler",
+        "IDE",
+        "benchmark",
+        "eval",
+        "tooling",
+        "context window",
+        "MCP",
+        "OpenCode",
+        "Claude",
+        "Anthropic",
+        "Groq",
+        "Devin",
+        "Cursor"
+      ],
+      "keywordsBlock": [
+        "funding",
+        "hiring",
+        "press",
+        "podcast",
+        "Spaces",
+        "giveaway",
+        "contest",
+        "politics",
+        "celebrity"
+      ]
+    }
+  ]
+}

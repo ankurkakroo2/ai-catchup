@@ -1,39 +1,31 @@
-import { SmolSource } from './smol.js';
-import { XSource } from './x.js';
-import { RSSSource } from './rss.js';
-import { HackerNewsSource } from './hackernews.js';
-import { RedditSource } from './reddit.js';
+import { SmolSource } from "./smol.js";
+import { HackerNewsSource } from "./hackernews.js";
+import { RedditSource } from "./reddit.js";
+import { XSource } from "./x.js";
+import { RSSSource } from "./rss.js";
 
 /**
- * Available news sources
- * Add new sources here as they are implemented
+ * Factory to create sources by type
  */
-export const sources = {
-  smol: SmolSource,
-  x: XSource,
-  rss: RSSSource,
-  hackernews: HackerNewsSource,
-  reddit: RedditSource,
-};
-
-/**
- * Get all available source names
- * @returns {Array<string>}
- */
-export function getAvailableSources() {
-  return Object.keys(sources);
+export function createSource(config = {}) {
+  const type = config.type || config.name;
+  switch (type) {
+    case "smol":
+      return new SmolSource(config);
+    case "rss":
+      return new RSSSource({ ...config, name: config.name || "RSS" });
+    case "hackernews":
+    case "hn":
+      return new HackerNewsSource(config);
+    case "reddit":
+      return new RedditSource(config);
+    case "x":
+      return new XSource(config);
+    default:
+      throw new Error(`Unknown source type: ${type}`);
+  }
 }
 
-/**
- * Create a source instance
- * @param {string} name - Source name
- * @param {Object} config - Source configuration
- * @returns {BaseSource}
- */
-export function createSource(name, config = {}) {
-  const SourceClass = sources[name];
-  if (!SourceClass) {
-    throw new Error(`Unknown source: ${name}`);
-  }
-  return new SourceClass(config);
+export function getAvailableSources() {
+  return ["smol", "rss", "hackernews", "hn", "reddit", "x"];
 }

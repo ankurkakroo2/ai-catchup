@@ -1,6 +1,6 @@
-import Parser from 'rss-parser';
-import { BaseSource } from './base.js';
-import crypto from 'crypto';
+import Parser from "rss-parser";
+import { BaseSource } from "./base.js";
+import crypto from "crypto";
 
 /**
  * SmolAI news source adapter
@@ -8,14 +8,16 @@ import crypto from 'crypto';
  */
 export class SmolSource extends BaseSource {
   constructor(config = {}) {
-    super('smol.ai', config);
-    this.feedUrl = config.url || 'https://news.smol.ai/rss.xml';
+    super("smol.ai", config);
+    this.feedUrl = config.feedUrl || "https://news.smol.ai/rss.xml";
+    this.maxAgeHours = config.maxAgeHours || 72;
+    this.limit = config.limit || 10;
     this.parser = new Parser({
       customFields: {
         item: [
-          ['description', 'description'],
-          ['content:encoded', 'content'],
-          ['content', 'contentSnippet'],
+          ["description", "description"],
+          ["content:encoded", "content"],
+          ["content", "contentSnippet"],
         ],
       },
     });
@@ -28,31 +30,40 @@ export class SmolSource extends BaseSource {
   async fetchNews() {
     try {
       const feed = await this.parser.parseURL(this.feedUrl);
+      const now = Date.now();
 
-      return feed.items.map(item => {
-        // Generate a unique ID from the link
-        const id = crypto
-          .createHash('md5')
-          .update(item.link || item.guid || item.title)
-          .digest('hex')
-          .substring(0, 8);
+      return feed.items
+        .map((item) => {
+          const pubDate = item.pubDate ? new Date(item.pubDate) : new Date();
+          const ageHours = (now - pubDate.getTime()) / 3600000;
 
-        // Extract tags from categories or content
-        const tags = this.extractTags(item);
+          if (ageHours > this.maxAgeHours) return null;
 
-        return {
-          id,
-          title: item.title || 'Untitled',
-          description: this.cleanDescription(item.contentSnippet || item.description || ''),
-          link: item.link || '',
-          pubDate: item.pubDate ? new Date(item.pubDate) : new Date(),
-          source: this.name,
-          tags,
-          content: this.cleanContent(
-            item.content || item['content:encoded'] || item.description || ''
-          ),
-        };
-      });
+          const id = crypto
+            .createHash("md5")
+            .update(item.link || item.guid || item.title)
+            .digest("hex")
+            .substring(0, 8);
+
+          const tags = this.extractTags(item);
+
+          return {
+            id,
+            title: item.title || "Untitled",
+            description: this.cleanDescription(
+              item.contentSnippet || item.description || "",
+            ),
+            link: item.link || "",
+            pubDate,
+            source: this.name,
+            tags,
+            content: this.cleanContent(
+              item.content || item["content:encoded"] || item.description || "",
+            ),
+          };
+        })
+        .filter(Boolean)
+        .slice(0, this.limit);
     } catch (error) {
       console.error(`Error fetching from ${this.name}:`, error.message);
       return [];
@@ -73,7 +84,7 @@ export class SmolSource extends BaseSource {
     }
 
     // Extract hashtags from content
-    const content = item.contentSnippet || item.description || '';
+    const content = item.contentSnippet || item.description || "";
     const hashtagMatches = content.match(/#[\w]+/g);
     if (hashtagMatches) {
       tags.push(...hashtagMatches);
@@ -88,17 +99,17 @@ export class SmolSource extends BaseSource {
    * @returns {string}
    */
   cleanDescription(text) {
-    if (!text) return '';
+    if (!text) return "";
 
     return text
-      .replace(/<[^>]*>/g, '') // Remove HTML tags
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
+      .replace(/<[^>]*>/g, "") // Remove HTML tags
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
-      .replace(/\n\s*\n/g, '\n\n') // Clean up extra newlines
+      .replace(/\n\s*\n/g, "\n\n") // Clean up extra newlines
       .trim();
   }
 
@@ -108,21 +119,21 @@ export class SmolSource extends BaseSource {
    * @returns {string}
    */
   cleanContent(content) {
-    if (!content) return '';
+    if (!content) return "";
 
     return content
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove scripts
-      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '') // Remove styles
-      .replace(/<br\s*\/?>/gi, '\n') // Convert br to newlines
-      .replace(/<\/p>/gi, '\n\n') // Convert closing p tags to double newlines
-      .replace(/<[^>]*>/g, '') // Remove remaining HTML tags
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "") // Remove scripts
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "") // Remove styles
+      .replace(/<br\s*\/?>/gi, "\n") // Convert br to newlines
+      .replace(/<\/p>/gi, "\n\n") // Convert closing p tags to double newlines
+      .replace(/<[^>]*>/g, "") // Remove remaining HTML tags
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
-      .replace(/\n\s*\n\s*\n/g, '\n\n') // Clean up extra newlines
+      .replace(/\n\s*\n\s*\n/g, "\n\n") // Clean up extra newlines
       .trim();
   }
 

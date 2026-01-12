@@ -1,103 +1,115 @@
-import Conf from 'conf';
+import fs from "fs";
+import path from "path";
+
+const defaultConfig = {
+  cache: {
+    ttl: 1800000,
+  },
+  global: {
+    limit: 20,
+    perSourceCap: 6,
+    dedup: true,
+    hardBlock: [
+      "funding",
+      "earnings",
+      "acquisition",
+      "hiring",
+      "job",
+      "press",
+      "podcast",
+      "politics",
+      "giveaway",
+      "meme",
+    ],
+  },
+  sources: [
+    {
+      name: "smol",
+      type: "rss",
+      enabled: true,
+      feedUrl: "https://news.smol.ai/feed.xml",
+      limit: 6,
+    },
+  ],
+};
+
+function loadFileConfig() {
+  try {
+    const configPath = path.join(
+      process.cwd(),
+      "config",
+      "sources.config.json",
+    );
+    const raw = fs.readFileSync(configPath, "utf-8");
+    return JSON.parse(raw);
+  } catch (error) {
+    return null;
+  }
+}
+
+function deepMerge(base, override) {
+  if (!override) return base;
+  const merged = { ...base, ...override };
+  merged.cache = { ...(base.cache || {}), ...(override.cache || {}) };
+  merged.global = { ...(base.global || {}), ...(override.global || {}) };
+  merged.sources = override.sources || base.sources || [];
+  return merged;
+}
+
+function getNested(obj, key) {
+  if (!key) return undefined;
+  return key
+    .split(".")
+    .reduce(
+      (acc, part) => (acc && acc[part] !== undefined ? acc[part] : undefined),
+      obj,
+    );
+}
 
 /**
  * Configuration service
- * Manages user preferences and source settings
+ * Loads repo config file if present, otherwise falls back to defaults
  */
 export class ConfigService {
   constructor() {
-    this.config = new Conf({
-      projectName: 'ai-catchup',
-      defaults: {
-        sources: {
-          smol: {
-            enabled: true,
-            url: 'https://news.smol.ai/rss.xml',
-          },
-          x: {
-            enabled: false,
-            handles: [],
-            limitPerHandle: 2,
-            overallLimit: 8,
-          },
-          hackernews: {
-            enabled: true,
-            minPoints: 5,
-            maxAgeHours: 72,
-            limit: 20,
-            queryTerms: ['AI', 'LLM'],
-          },
-          reddit: {
-            enabled: true,
-            subreddits: ['MachineLearning', 'artificial'],
-            minUpvotes: 10,
-            maxAgeHours: 72,
-            limit: 20,
-          },
-        },
-        cache: {
-          enabled: true,
-          ttl: 3600000, // 1 hour
-        },
-        display: {
-          limit: 10,
-          showIcons: true,
-        },
-        ignore: {
-          titles: ['not much happened today', 'Not much happened today', 'NOT MUCH HAPPENED TODAY'],
-        },
-      },
-    });
+    const fileConfig = loadFileConfig();
+    this.configData = deepMerge(defaultConfig, fileConfig || undefined);
   }
 
   /**
-   * Get configuration value
-   * @param {string} key - Config key (dot notation supported)
-   * @returns {any}
+   * Get configuration value (dot notation supported)
    */
   get(key) {
-    return this.config.get(key);
+    return getNested(this.configData, key);
   }
 
   /**
-   * Set configuration value
-   * @param {string} key - Config key
-   * @param {any} value - Value to set
-   */
-  set(key, value) {
-    this.config.set(key, value);
-  }
-
-  /**
-   * Get all configuration
-   * @returns {Object}
+   * Get entire configuration
    */
   getAll() {
-    return this.config.store;
+    return this.configData;
   }
 
   /**
-   * Reset configuration to defaults
+   * Get enabled source configs
    */
-  reset() {
-    this.config.clear();
+  getEnabledSourceConfigs() {
+    return (this.configData.sources || []).filter(
+      (source) => source.enabled !== false,
+    );
   }
 
   /**
-   * Get source configuration
-   * @param {string} sourceName - Source name
-   * @returns {Object}
+   * Get global settings
    */
-  getSourceConfig(sourceName) {
-    return this.config.get(`sources.${sourceName}`) || {};
+  getGlobal() {
+    return this.configData.global || {};
   }
 
   /**
-   * Get all enabled sources
-   * @returns {Array<string>}
+   * Hard block keywords (global)
    */
-  getEnabledSources() {
-    const sources = this.config.get('sources');
-    return Object.keys(sources).filter(name => sources[name].enabled);
+  getHardBlockKeywords() {
+    return this.get("global.hardBlock") || [];
   }
 }
