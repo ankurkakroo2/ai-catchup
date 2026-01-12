@@ -12,7 +12,7 @@ export class ConfigService {
         sources: {
           smol: {
             enabled: true,
-            url: 'https://news.smol.ai/feed.xml',
+            url: 'https://news.smol.ai/rss.xml',
           },
           x: {
             enabled: false,

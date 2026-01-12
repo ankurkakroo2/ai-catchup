@@ -9,7 +9,7 @@ import crypto from 'crypto';
 export class SmolSource extends BaseSource {
   constructor(config = {}) {
     super('smol.ai', config);
-    this.feedUrl = config.url || 'https://news.smol.ai/feed.xml';
+    this.feedUrl = config.url || 'https://news.smol.ai/rss.xml';
     this.parser = new Parser({
       customFields: {
         item: [
