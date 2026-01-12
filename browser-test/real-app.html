@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI CatchUp - Real App in Browser</title>
+    <link rel="stylesheet" href="/browser-test/ink-web-lib/index.css" />
+    <script src="/browser-test/ink-web-lib/index.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Courier New', monospace;
+        background: #000;
+        color: #fff;
+        overflow: hidden;
+      }
+
+      #root {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #scroll-info {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: #2d2d2d;
+        color: #98c379;
+        padding: 10px 15px;
+        border-radius: 5px;
+        font-size: 12px;
+        z-index: 1000;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      }
+
+      #scroll-info.warning {
+        color: #e06c75;
+      }
+
+      /*
+      *** BUG FIX: Ensure ink-web container scrolls to top ***
+      The issue is that ink-web's Xterm.js instance auto-scrolls
+      to bottom when content is rendered. We need to override this.
+    */
+      #app-container {
+        flex: 1;
+        overflow: hidden;
+        position: relative;
+      }
+
+      #terminal-wrapper {
+        width: 100%;
+        height: 100%;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        scroll-behavior: auto !important;
+      }
+
+      /* Force scroll position */
+      #terminal-wrapper::-webkit-scrollbar {
+        width: 10px;
+      }
+
+      #terminal-wrapper::-webkit-scrollbar-track {
+        background: #1e1e1e;
+      }
+
+      #terminal-wrapper::-webkit-scrollbar-thumb {
+        background: #4b5363;
+        border-radius: 5px;
+      }
+
+      /* Initial scroll to top */
+      .scroll-initial {
+        scroll-margin-top: 0 !important;
+        scroll-padding-top: 0 !important;
+      }
+
+      /* Fix for ink-web xterm instance */
+      .xterm {
+        overflow-y: auto !important;
+      }
+
+      .xterm-viewport {
+        overflow-y: auto !important;
+        scroll-behavior: auto !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scroll-info">Initializing...</div>
+    <div id="root">
+      <div id="app-container">
+        <div id="terminal-wrapper"></div>
+      </div>
+    </div>
+    <script>
+      const scrollInfo = document.getElementById('scroll-info');
+
+      // Function to update scroll info display
+      function updateScrollInfo() {
+        const wrapper = document.getElementById('terminal-wrapper');
+        if (!wrapper) return;
+
+        const scrollTop = wrapper.scrollTop;
+        const maxScroll = wrapper.scrollHeight - wrapper.clientHeight;
+        const percent = maxScroll > 0 ? ((scrollTop / maxScroll) * 100).toFixed(1) : 0;
+
+        if (scrollTop < 50) {
+          scrollInfo.textContent = `Top (${percent}%)`;
+          scrollInfo.className = '';
+        } else if (scrollTop >= maxScroll - 50) {
+          scrollInfo.textContent = `Bottom (${percent}%)`;
+          scrollInfo.className = 'warning';
+        } else {
+          scrollInfo.textContent = `Middle (${percent}%)`;
+          scrollInfo.className = '';
+        }
+      }
+
+      // *** CRITICAL BUG FIX: Force scroll to top ***
+      function forceScrollToTop() {
+        console.log('🔧 Forcing scroll to top...');
+
+        const wrapper = document.getElementById('terminal-wrapper');
+        const appContainer = document.getElementById('app-container');
+        const root = document.getElementById('root');
+
+        // Try multiple methods
+        if (wrapper) {
+          wrapper.scrollTop = 0;
+        }
+        appContainer.scrollTop = 0;
+        root.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+
+        // Force reflow
+        void wrapper.offsetHeight;
+
+        // Request animation frame for proper timing
+        requestAnimationFrame(() => {
+          if (wrapper) wrapper.scrollTop = 0;
+          appContainer.scrollTop = 0;
+          root.scrollTop = 0;
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+
+          // Try again after 50ms
+          setTimeout(() => {
+            if (wrapper) wrapper.scrollTop = 0;
+          }, 50);
+
+          setTimeout(() => {
+            if (wrapper) wrapper.scrollTop = 0;
+          }, 100);
+
+          setTimeout(() => {
+            if (wrapper) wrapper.scrollTop = 0;
+            updateScrollInfo();
+            console.log('✓ Scroll reset complete');
+          }, 200);
+        });
+      }
+
+      // Safety loop to maintain scroll at top
+      let checkCount = 0;
+      const maxChecks = 30; // 3 seconds
+
+      function maintainScrollPosition() {
+        const wrapper = document.getElementById('terminal-wrapper');
+        if (!wrapper || checkCount >= maxChecks) return;
+
+        checkCount++;
+
+        if (wrapper.scrollTop > 50) {
+          console.warn(`⚠️  Scroll drifted to ${wrapper.scrollTop}px, resetting...`);
+          wrapper.scrollTop = 0;
+        }
+
+        updateScrollInfo();
+        setTimeout(maintainScrollPosition, 100);
+      }
+
+      // Initialize with ink-web
+      if (typeof window.InkWeb === 'undefined') {
+        console.error('❌ InkWeb not loaded');
+        scrollInfo.textContent = 'Error: InkWeb not loaded';
+        scrollInfo.className = 'warning';
+      } else {
+        console.log('✓ InkWeb loaded, mounting app...');
+
+        window.InkWeb.mount({
+          element: document.getElementById('terminal-wrapper'),
+          scriptUrl: '/dist/index.js',
+          args: ['news', '--limit', '10'],
+          onLoad: () => {
+            console.log('✓ App loaded, forcing scroll to top...');
+
+            // Force scroll to top immediately
+            forceScrollToTop();
+
+            // Start safety loop
+            setTimeout(maintainScrollPosition, 500);
+          },
+          onError: err => {
+            console.error('❌ App error:', err);
+            scrollInfo.textContent = `Error: ${err.message}`;
+            scrollInfo.className = 'warning';
+          },
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI CatchUp - Bug vs Fix Comparison</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Courier New', monospace;
+        background: #000;
+        color: #fff;
+        overflow: hidden;
+      }
+
+      #container {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #header {
+        padding: 15px 20px;
+        background: #2d2d2d;
+        border-bottom: 2px solid #3e4451;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      #header h1 {
+        margin: 0;
+        font-size: 16px;
+        color: #61afef;
+      }
+
+      #controls {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      button {
+        padding: 6px 12px;
+        background: #3e4451;
+        color: #fff;
+        border: 1px solid #5c6370;
+        border-radius: 4px;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 13px;
+      }
+
+      button:hover {
+        background: #4b5363;
+      }
+
+      button.active {
+        background: #98c379;
+        border-color: #98c379;
+      }
+
+      button.bug {
+        border-color: #e06c75;
+      }
+
+      button.fixed {
+        border-color: #98c379;
+      }
+
+      #scroll-status {
+        font-size: 12px;
+        padding: 5px 10px;
+        background: #3e4451;
+        color: #abb2bf;
+        border-radius: 3px;
+        font-weight: bold;
+      }
+
+      #scroll-status.bug-mode {
+        background: #e06c75;
+        color: #fff;
+      }
+
+      #scroll-status.fixed-mode {
+        background: #98c379;
+        color: #1e1e1e;
+      }
+
+      #mode-indicator {
+        font-size: 11px;
+        padding: 4px 8px;
+        border-radius: 3px;
+        margin-left: 10px;
+      }
+
+      #mode-indicator.bug {
+        background: #e06c75;
+      }
+
+      #mode-indicator.fixed {
+        background: #98c379;
+        color: #1e1e1e;
+      }
+
+      #terminal-container {
+        flex: 1;
+        overflow: hidden;
+        position: relative;
+      }
+
+      #terminal {
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+        background: #1e1e1e;
+        padding: 20px;
+        scroll-behavior: smooth;
+      }
+
+      #terminal::-webkit-scrollbar {
+        width: 10px;
+      }
+
+      #terminal::-webkit-scrollbar-track {
+        background: #1e1e1e;
+      }
+
+      #terminal::-webkit-scrollbar-thumb {
+        background: #4b5363;
+        border-radius: 5px;
+      }
+
+      #terminal::-webkit-scrollbar-thumb:hover {
+        background: #5c6370;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <div id="header">
+        <div>
+          <h1>AI CatchUp - Bug vs Fix Demo</h1>
+          <small id="mode-indicator" class="bug">⚠️ BUG MODE</small>
+        </div>
+        <div id="controls">
+          <button id="btn-bug" class="bug active" onclick="showBug()">Show Bug</button>
+          <button id="btn-fixed" class="fixed" onclick="showFixed()">Show Fix</button>
+          <button onclick="setZoom(100)">100%</button>
+          <button onclick="setZoom(200)">200%</button>
+          <button onclick="setZoom(300)">300%</button>
+          <div id="scroll-status">Loading...</div>
+        </div>
+      </div>
+      <div id="terminal-container">
+        <div id="terminal">
+          <pre id="content"></pre>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const terminal = document.getElementById('terminal');
+      const content = document.getElementById('content');
+      const scrollStatus = document.getElementById('scroll-status');
+      const modeIndicator = document.getElementById('mode-indicator');
+      const btnBug = document.getElementById('btn-bug');
+      const btnFixed = document.getElementById('btn-fixed');
+
+      let isFixedMode = false;
+      let currentZoom = 100;
+
+      function updateScrollStatus() {
+        const scrollTop = terminal.scrollTop;
+        const maxScroll = terminal.scrollHeight - terminal.clientHeight;
+        const percent = maxScroll > 0 ? ((scrollTop / maxScroll) * 100).toFixed(1) : 0;
+
+        if (scrollTop < 50) {
+          scrollStatus.textContent = `Top (${percent}%)`;
+        } else if (scrollTop >= maxScroll - 50) {
+          scrollStatus.textContent = `Bottom (${percent}%)`;
+        } else {
+          scrollStatus.textContent = `Middle (${percent}%)`;
+        }
+      }
+
+      function generateContent() {
+        const items = Array.from(
+          { length: 30 },
+          (_, i) => `
+  ▶ ${i + 1}. AI News Item ${i + 1}
+     smol.ai • ${(i + 1) * 2} hours ago
+`
+        ).join('\n');
+
+        return `
+╔════════════════════════════════════════════════════════╗
+║  AI CatchUp - Latest AI News (30 items)                    ║
+╚════════════════════════════════════════════════════════╝
+${items}
+╔════════════════════════════════════════════════════════╗
+║  ↑↓ Navigate • Enter to read • Q to quit                   ║
+╚════════════════════════════════════════════════════════╝
+      `;
+      }
+
+      // Show BUG version (no scroll fix)
+      function showBug() {
+        isFixedMode = false;
+        btnBug.classList.add('active');
+        btnFixed.classList.remove('active');
+        modeIndicator.textContent = '⚠️  BUG MODE';
+        modeIndicator.className = 'bug';
+        scrollStatus.className = 'bug-mode';
+
+        console.log('⚠️  Loading in BUG MODE (no scroll fix)...');
+
+        content.textContent = generateContent();
+        updateScrollStatus();
+
+        console.log('Bug mode: Scroll is whatever it naturally is after render');
+        console.log('Expected: May be at bottom or middle, NOT at top');
+      }
+
+      // Show FIXED version (with scroll fix)
+      function showFixed() {
+        isFixedMode = true;
+        btnFixed.classList.add('active');
+        btnBug.classList.remove('active');
+        modeIndicator.textContent = '✅  FIXED MODE';
+        modeIndicator.className = 'fixed';
+        scrollStatus.className = 'fixed-mode';
+
+        console.log('✅ Loading in FIXED MODE (with scroll fix)...');
+
+        content.textContent = generateContent();
+
+        // Apply scroll fix
+        applyScrollFix();
+      }
+
+      function applyScrollFix() {
+        console.log('🔧 Applying scroll fix...');
+
+        terminal.scrollTop = 0;
+        void terminal.offsetHeight;
+
+        requestAnimationFrame(() => {
+          terminal.scrollTop = 0;
+
+          setTimeout(() => {
+            terminal.scrollTop = 0;
+          }, 50);
+
+          setTimeout(() => {
+            terminal.scrollTop = 0;
+            updateScrollStatus();
+            console.log('✓ Scroll forced to top');
+          }, 100);
+
+          setTimeout(() => {
+            terminal.scrollTop = 0;
+          }, 200);
+        });
+      }
+
+      function setZoom(level) {
+        currentZoom = level;
+        document.documentElement.style.zoom = level / 100;
+        updateScrollStatus();
+        console.log(`Zoom set to ${level}%`);
+      }
+
+      // Monitor scroll
+      terminal.addEventListener('scroll', updateScrollStatus);
+
+      // Initialize in bug mode by default
+      window.addEventListener('load', () => {
+        console.log('📋 Initializing...');
+        showBug();
+      });
+    </script>
+  </body>
+</html>

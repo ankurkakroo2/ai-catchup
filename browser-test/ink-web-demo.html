@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI CatchUp - ink-web Demo</title>
+    <script src="/ink-web/index.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Courier New', monospace;
+        background: #000;
+        color: #fff;
+        overflow: hidden;
+      }
+
+      #root {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* 
+      *** CRITICAL BUG FIX: Ensure scroll starts at top ***
+      When ink-web renders, we need to override default scroll behavior
+    */
+      #ink-web-app {
+        width: 100%;
+        height: 100%;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        scroll-behavior: auto !important;
+      }
+
+      #ink-web-app::-webkit-scrollbar {
+        width: 10px;
+      }
+
+      #ink-web-app::-webkit-scrollbar-track {
+        background: #1e1e1e;
+      }
+
+      #ink-web-app::-webkit-scrollbar-thumb {
+        background: #4b5363;
+        border-radius: 5px;
+      }
+
+      /* Force scroll to top on load */
+      .scroll-top-fix {
+        scroll-margin-top: 0 !important;
+        scroll-padding-top: 0 !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      // Get ink-web module
+      const InkWeb = window.InkWeb;
+
+      // *** SCROLL FIX: Initialize and force scroll to top ***
+      function initializeApp() {
+        console.log('Initializing AI CatchUp with scroll fix...');
+
+        // Mount ink-web app
+        InkWeb.mount({
+          element: document.getElementById('root'),
+          scriptUrl: '/dist/index.js',
+          args: ['news', '--limit', '10'],
+          onLoad: () => {
+            console.log('✓ App loaded');
+
+            // Force scroll to top immediately after load
+            forceScrollToTop();
+          },
+          onError: err => {
+            console.error('App error:', err);
+            document.getElementById('root').innerHTML = `
+            <div style="color: red; padding: 20px;">
+              Error: ${err.message}
+            </div>
+          `;
+          },
+        });
+      }
+
+      // Force scroll to top using multiple methods
+      function forceScrollToTop() {
+        const root = document.getElementById('root');
+        const app = root.querySelector('#ink-web-app') || root;
+
+        // Method 1: Direct scroll
+        app.scrollTop = 0;
+        root.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+
+        // Method 2: Force reflow
+        void app.offsetHeight;
+
+        // Method 3: Request animation frame
+        requestAnimationFrame(() => {
+          app.scrollTop = 0;
+          root.scrollTop = 0;
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+
+          // Method 4: Safety loop
+          setTimeout(() => {
+            app.scrollTop = 0;
+          }, 50);
+
+          setTimeout(() => {
+            app.scrollTop = 0;
+          }, 100);
+
+          setTimeout(() => {
+            app.scrollTop = 0;
+            console.log('✓ Scroll forced to top');
+          }, 200);
+        });
+      }
+
+      // Monitor scroll and report
+      let scrollCheckCount = 0;
+      const maxScrollChecks = 30; // Check for 3 seconds (30 * 100ms)
+
+      function monitorScroll() {
+        const root = document.getElementById('root');
+        const app = root.querySelector('#ink-web-app') || root;
+
+        if (app && scrollCheckCount < maxScrollChecks) {
+          scrollCheckCount++;
+
+          const scrollTop = app.scrollTop;
+          const maxScroll = app.scrollHeight - app.clientHeight;
+
+          // Report scroll position
+          console.log(
+            `Scroll check ${scrollCheckCount}/${maxScrollChecks}: ${scrollTop}px (max: ${maxScroll}px)`
+          );
+
+          // Auto-correct if scroll drifted
+          if (scrollTop > 50) {
+            console.warn(`⚠️  Scroll at ${scrollTop}px, forcing to top...`);
+            app.scrollTop = 0;
+          }
+
+          // Continue monitoring
+          setTimeout(monitorScroll, 100);
+        }
+      }
+
+      // Initialize
+      initializeApp();
+    </script>
+  </body>
+</html>
