@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI CatchUp - Full App in Browser</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: #1e1e1e;
+        color: #fff;
+        font-family: 'Courier New', monospace;
+      }
+
+      #app-container {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      #header {
+        padding: 10px 20px;
+        background: #2d2d2d;
+        border-bottom: 2px solid #3e4451;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      #header h1 {
+        margin: 0;
+        font-size: 16px;
+        color: #61afef;
+      }
+
+      #scroll-status {
+        font-size: 12px;
+        padding: 5px 10px;
+        background: #3e4451;
+        border-radius: 3px;
+      }
+
+      #scroll-status.at-top {
+        color: #98c379;
+      }
+
+      #scroll-status.not-at-top {
+        color: #e06c75;
+      }
+
+      #terminal-wrapper {
+        flex: 1;
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* 
+      * CRITICAL FIX FOR SCROLL POSITION BUG:
+      * Terminal container must start with scrollTop = 0 when app loads.
+      * This is achieved by:
+      * 1. Setting overflow behavior
+      * 2. Using requestAnimationFrame to reset scroll after render
+      * 3. Multiple fallback attempts to ensure scroll resets
+      */
+      #terminal {
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scroll-behavior: smooth;
+        background: #000;
+        color: #abb2bf;
+      }
+
+      /* Force scroll position to 0 on page load */
+      #terminal {
+        scroll-padding-top: 0 !important;
+      }
+
+      /* Custom scrollbar styling */
+      #terminal::-webkit-scrollbar {
+        width: 10px;
+      }
+
+      #terminal::-webkit-scrollbar-track {
+        background: #1e1e1e;
+      }
+
+      #terminal::-webkit-scrollbar-thumb {
+        background: #4b5363;
+        border-radius: 5px;
+      }
+
+      #terminal::-webkit-scrollbar-thumb:hover {
+        background: #5c6370;
+      }
+
+      #terminal::-webkit-scrollbar-corner {
+        background: #1e1e1e;
+      }
+
+      /* 
+      When Ink renders, it may auto-scroll. 
+      We need to override this behavior on first render.
+    */
+      .force-scroll-to-top {
+        scroll-behavior: auto !important;
+      }
+
+      #reload-btn {
+        padding: 6px 12px;
+        background: #3e4451;
+        color: #fff;
+        border: 1px solid #5c6370;
+        border-radius: 4px;
+        cursor: pointer;
+        font-family: inherit;
+      }
+
+      #reload-btn:hover {
+        background: #4b5363;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app-container">
+      <div id="header">
+        <div>
+          <h1>AI CatchUp in Browser</h1>
+          <small style="color: #abb2bf">Terminal emulator with scroll fix</small>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center">
+          <div id="scroll-status">Checking...</div>
+          <button id="reload-btn" onclick="resetToTop()">Reset to Top</button>
+          <button id="reload-btn" onclick="location.reload()">Reload App</button>
+        </div>
+      </div>
+      <div id="terminal-wrapper">
+        <div id="terminal">
+          <pre id="output">Starting AI CatchUp...</pre>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const terminal = document.getElementById('terminal');
+      const terminalWrapper = document.getElementById('terminal-wrapper');
+      const scrollStatus = document.getElementById('scroll-status');
+      const output = document.getElementById('output');
+
+      function updateScrollStatus() {
+        const scrollTop = terminal.scrollTop;
+        const maxScroll = terminal.scrollHeight - terminal.clientHeight;
+        const percent = maxScroll > 0 ? ((scrollTop / maxScroll) * 100).toFixed(1) : 0;
+
+        if (scrollTop < 50) {
+          scrollStatus.textContent = `Top (${percent}%)`;
+          scrollStatus.className = 'at-top';
+        } else if (scrollTop >= maxScroll - 50) {
+          scrollStatus.textContent = `Bottom (${percent}%)`;
+          scrollStatus.className = 'not-at-top';
+        } else {
+          scrollStatus.textContent = `Middle (${percent}%)`;
+          scrollStatus.className = '';
+        }
+      }
+
+      function resetToTop() {
+        terminal.scrollTop = 0;
+        terminalWrapper.scrollTop = 0;
+        window.scrollTo(0, 0);
+        updateScrollStatus();
+        console.log('✓ Reset scroll to top');
+      }
+
+      // ============================================
+      // BUG FIX: Force scroll to top on page load
+      // ============================================
+      function ensureScrollAtTop() {
+        // Try multiple methods to ensure scroll is at top
+        terminal.scrollTop = 0;
+        terminalWrapper.scrollTop = 0;
+
+        // Force reflow
+        void terminal.offsetHeight;
+
+        // Try again
+        requestAnimationFrame(() => {
+          terminal.scrollTop = 0;
+          updateScrollStatus();
+        });
+      }
+
+      // Initial reset on load
+      window.addEventListener('load', () => {
+        ensureScrollAtTop();
+
+        // Safety check: ensure scroll stays at top for first 2 seconds
+        let attempts = 0;
+        const maxAttempts = 20; // 20 attempts * 100ms = 2 seconds
+
+        const checkInterval = setInterval(() => {
+          attempts++;
+
+          if (terminal.scrollTop > 50) {
+            console.warn(`⚠️  Scroll drifted to ${terminal.scrollTop}px, resetting...`);
+            terminal.scrollTop = 0;
+          }
+
+          if (attempts >= maxAttempts) {
+            clearInterval(checkInterval);
+            console.log('✓ Scroll position stabilized at top');
+          }
+
+          updateScrollStatus();
+        }, 100);
+      });
+
+      // Monitor scroll
+      terminal.addEventListener('scroll', updateScrollStatus);
+
+      // Simulate AI CatchUp output (replace with actual CLI)
+      setTimeout(() => {
+        output.textContent = `
+╔════════════════════════════════════════════════════════╗
+║  AI CatchUp - Latest AI News (20 items)                    ║
+╚════════════════════════════════════════════════════════╝
+
+  ▶ 1. OpenAI Announces GPT-5 with Revolutionary Capabilities
+     smol.ai • 2 hours ago
+     AI Technology • Large Language Models
+
+  ▶ 2. Claude 3.5 Released: Major Performance Improvements
+     smol.ai • 3 hours ago
+     AI Research • Performance
+
+  ▶ 3. New AI Safety Framework Proposed by Leading Researchers
+     smol.ai • 5 hours ago
+     Safety • Ethics
+
+  ▶ 4. Breakthrough in AI Image Generation Models
+     smol.ai • 6 hours ago
+     Computer Vision • Generative AI
+
+  ▶ 5. Anthropic Introduces New Tool Use Capabilities
+     smol.ai • 8 hours ago
+     Product • Tools
+
+  ▶ 6. AI-Assisted Coding Tools Gain Popularity
+     smol.ai • 10 hours ago
+     Development • Tools
+
+  ▶ 7. Study Shows AI Can Predict Drug Interactions
+     smol.ai • 12 hours ago
+     Healthcare • Research
+
+  ▶ 8. Open Source AI Models Reach New Performance Benchmarks
+     smol.ai • 14 hours ago
+     Open Source • Performance
+
+  ▶ 9. New Training Methods Reduce AI Energy Consumption by 40%
+     smol.ai • 16 hours ago
+     Efficiency • Environment
+
+  ▶ 10. AI Regulation Bills Advance in European Parliament
+     smol.ai • 18 hours ago
+     Policy • Regulation
+
+╔════════════════════════════════════════════════════════╗
+║  ↑↓ Navigate • Enter to read • Q to quit                   ║
+╚════════════════════════════════════════════════════════╝
+
+--- DEBUG: App loaded, scroll position should be 0 (top) ---
+`;
+        // Reset scroll after content is rendered
+        requestAnimationFrame(() => {
+          ensureScrollAtTop();
+        });
+      }, 500);
+    </script>
+  </body>
+</html>
