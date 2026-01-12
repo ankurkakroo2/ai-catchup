@@ -43,36 +43,45 @@ program
   });
 
 program
-  .command('config')
+  .command('config [key] [value]')
   .description('View or manage configuration')
-  .option('-g, --get <key>', 'Get a configuration value')
-  .option('-s, --set <key> <value>', 'Set a configuration value')
+  .option('-g, --get', 'Get a configuration value')
+  .option('-s, --set', 'Set a configuration value')
   .option('--reset', 'Reset configuration to defaults')
-  .action(async options => {
+  .action(async (key, value, options) => {
     const config = new ConfigService();
 
     if (options.reset) {
       config.reset();
       console.log('Configuration reset to defaults');
     } else if (options.get) {
-      const value = config.get(options.get);
-      console.log(JSON.stringify(value, null, 2));
+      if (!key) {
+        console.error('Usage: --get requires a key');
+        process.exit(1);
+      }
+      const configKey = options.get === true ? key : options.get;
+      const configValue = config.get(configKey);
+      console.log(JSON.stringify(configValue, null, 2));
     } else if (options.set) {
-      const [key, value] = options.set.split(' ');
-      if (!value) {
-        console.error('Usage: --set <key> <value>');
+      if (!key || value === undefined) {
+        console.error('Usage: config set <key> <value>');
         process.exit(1);
       }
       try {
         const parsedValue = JSON.parse(value);
         config.set(key, parsedValue);
-        console.log(`Set ${key} to`, parsedValue);
+        console.log(`Set ${key} to`, parsedValue || value);
       } catch {
         config.set(key, value);
         console.log(`Set ${key} to`, value);
       }
     } else {
-      console.log(JSON.stringify(config.getAll(), null, 2));
+      if (key) {
+        const configValue = config.get(key);
+        console.log(JSON.stringify(configValue, null, 2));
+      } else {
+        console.log(JSON.stringify(config.getAll(), null, 2));
+      }
     }
   });
 

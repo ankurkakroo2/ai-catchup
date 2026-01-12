@@ -77,7 +77,7 @@ export class NewsAggregator {
    * @returns {Array<NewsItem>}
    */
   sortAndLimit(news, limit) {
-    return news.sort((a, b) => b.pubDate - a.pubDate).slice(0, limit);
+    return news.sort((a, b) => a.pubDate - b.pubDate).slice(0, limit);
   }
 
   /**
