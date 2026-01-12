@@ -22,7 +22,7 @@ export class NewsAggregator {
    * @returns {Promise<Array<NewsItem>>}
    */
   async fetchNews(options = {}) {
-    const { useCache = true, limit = 50 } = options;
+    const { useCache = true, limit = 7 } = options;
     const cacheKey = 'latest-news';
 
     // Try to get from cache first
@@ -77,7 +77,33 @@ export class NewsAggregator {
    * @returns {Array<NewsItem>}
    */
   sortAndLimit(news, limit) {
-    return news.sort((a, b) => a.pubDate - b.pubDate).slice(0, limit);
+    // Sort by date, newest first
+    const sorted = news.sort((a, b) => a.pubDate - b.pubDate);
+
+    // Group by source for diversity
+    const grouped = {};
+    sorted.forEach(item => {
+      if (!grouped[item.source]) {
+        grouped[item.source] = [];
+      }
+      grouped[item.source].push(item);
+    });
+
+    // Interleave items from different sources
+    const diversified = [];
+    const sources = Object.keys(grouped);
+    let index = 0;
+
+    while (diversified.length < limit && index < sorted.length) {
+      sources.forEach(source => {
+        if (grouped[source] && grouped[source].length > 0) {
+          diversified.push(grouped[source].shift());
+        }
+      });
+      index++;
+    }
+
+    return diversified.slice(0, limit);
   }
 
   /**

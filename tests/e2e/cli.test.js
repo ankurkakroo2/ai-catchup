@@ -1,4 +1,4 @@
-import { test, expect, beforeAll, afterAll } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 /**
  * AI CatchUp E2E Tests
@@ -8,14 +8,14 @@ import { test, expect, beforeAll, afterAll } from '@playwright/test';
 const BUILD_PATH = './dist/index.js';
 
 describe('AI CatchUp CLI', () => {
-  beforeAll(async () => {
+  test.beforeAll(async () => {
     console.log('🏗  Building AI CatchUp...');
     const { execSync } = await import('child_process');
     execSync('npm run build', { stdio: 'inherit' });
     console.log('✅ Build complete');
   });
 
-  afterAll(async () => {
+  test.afterAll(async () => {
     console.log('🧹 Cleaning up config...');
     const { unlinkSync } = await import('fs');
     try {

@@ -40,7 +40,7 @@ export class ConfigService {
           ttl: 3600000, // 1 hour
         },
         display: {
-          limit: 20,
+          limit: 7,
           showIcons: true,
         },
       },
