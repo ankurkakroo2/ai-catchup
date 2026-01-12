@@ -108,7 +108,7 @@ export class NewsAggregator {
     const sources = Object.keys(grouped);
     let index = 0;
 
-    while (diversified.length < limit && index < sorted.length) {
+    while (diversified.length < limit && index < filtered.length) {
       sources.forEach(source => {
         if (grouped[source] && grouped[source].length > 0) {
           diversified.push(grouped[source].shift());

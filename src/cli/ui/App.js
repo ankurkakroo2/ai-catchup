@@ -36,7 +36,7 @@ export function App({ limit = 20, sourceFilter = null, keywords = null }) {
       try {
         setIsLoading(true);
         setError(null);
-        let items = await aggregator.fetchNews({ limit: 100 });
+        let items = await aggregator.fetchNews({ limit });
 
         if (sourceFilter) {
           items = items.filter(item =>
@@ -48,7 +48,6 @@ export function App({ limit = 20, sourceFilter = null, keywords = null }) {
           items = aggregator.filterByKeywords(items, keywords);
         }
 
-        items = items.slice(0, limit);
         setNews(items);
       } catch (err) {
         setError(err.message);
