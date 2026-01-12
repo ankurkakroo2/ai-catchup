@@ -21,14 +21,14 @@ export class ConfigService {
             overallLimit: 8,
           },
           hackernews: {
-            enabled: false,
+            enabled: true,
             minPoints: 5,
             maxAgeHours: 72,
             limit: 20,
             queryTerms: ['AI', 'LLM'],
           },
           reddit: {
-            enabled: false,
+            enabled: true,
             subreddits: ['MachineLearning', 'artificial'],
             minUpvotes: 10,
             maxAgeHours: 72,
