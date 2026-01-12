@@ -62,7 +62,7 @@ describe('CLI Integration Tests', () => {
     it('config get command retrieves value', async () => {
       const result = await runCLI(['config', '--get', 'display.limit']);
       expect(result.exitCode).toBe(0);
-      expect(result.stdout.trim()).toBe('7');
+      expect(result.stdout.trim()).toBe('10');
     }, 10000);
 
     it('config set command updates value', async () => {

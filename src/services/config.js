@@ -40,8 +40,11 @@ export class ConfigService {
           ttl: 3600000, // 1 hour
         },
         display: {
-          limit: 7,
+          limit: 10,
           showIcons: true,
+        },
+        ignore: {
+          titles: ['not much happened today', 'Not much happened today', 'NOT MUCH HAPPENED TODAY'],
         },
       },
     });

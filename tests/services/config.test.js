@@ -56,7 +56,7 @@ describe('ConfigService', () => {
 
       config.reset();
 
-      expect(config.get('display.limit')).toBe(7);
+      expect(config.get('display.limit')).toBe(10);
       expect(config.get('display.showIcons')).toBe(true);
     });
   });

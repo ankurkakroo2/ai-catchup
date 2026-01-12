@@ -22,7 +22,7 @@ export class NewsAggregator {
    * @returns {Promise<Array<NewsItem>>}
    */
   async fetchNews(options = {}) {
-    const { useCache = true, limit = 7 } = options;
+    const { useCache = true, limit = 10 } = options;
     const cacheKey = 'latest-news';
 
     // Try to get from cache first
@@ -77,8 +77,22 @@ export class NewsAggregator {
    * @returns {Array<NewsItem>}
    */
   sortAndLimit(news, limit) {
+    // Get ignore list
+    const ignoreTitles = this.config.get('ignore.titles') || [];
+
+    // Filter out ignored items
+    const filtered = news.filter(item => {
+      const shouldIgnore = ignoreTitles.some(ignoreTitle =>
+        item.title.toLowerCase().includes(ignoreTitle.toLowerCase())
+      );
+      if (shouldIgnore) {
+        console.log(`[Aggregator] Ignoring item: "${item.title}"`);
+      }
+      return !shouldIgnore;
+    });
+
     // Sort by date, newest first
-    const sorted = news.sort((a, b) => a.pubDate - b.pubDate);
+    const sorted = filtered.sort((a, b) => a.pubDate - b.pubDate);
 
     // Group by source for diversity
     const grouped = {};
