@@ -1,95 +1,116 @@
-# AI News 📰🤖
+# AI Catchup v2.0 🤖
 
-A fast, terminal-based CLI tool for developers to stay updated with high-quality AI news from curated sources.
+A beautiful terminal-based CLI for curated AI news from premium sources, built with Bun and OpenTUI.
 
-<img width="2554" height="1616" alt="image" src="https://github.com/user-attachments/assets/b49d1fe1-31ca-466c-b5d2-4951d32684e6" />
+## ✨ Features
 
+- 🎨 **Beautiful OpenTUI Interface** - Modern, smooth terminal UI with React
+- 📰 **Multiple News Sources** - RSS, Hacker News, Reddit, X/Twitter, SmolAI
+- 🔄 **Smart Caching** - Fast subsequent loads with offline support
+- 🔍 **Search & Filter** - Find relevant content quickly
+- 📊 **Intelligent Scoring** - Prioritizes recent, high-engagement content
+- 📱 **Article Details** - Full article view with smooth scrolling
+- ⌨️ **Full Keyboard Support** - Vim-style navigation and help overlays
+- 🎯 **Configurable** - Extensive CLI flags and source configuration
 
-## Features
+## 🚀 Quick Start
 
-- 📰 **Curated AI News** - Get the latest AI news from premium sources (smol.ai, Reddit)
-- ⌨️ **Rich Terminal UI** - Beautiful, interactive interface with keyboard navigation
-- 🚀 **Fast & Offline** - Caching support for quick access and offline reading
-- 🎯 **Developer-Focused** - Clean, distraction-free news consumption
-- 🔌 **Extensible** - Easy to add new sources via the sources folder
-- 🖥️ **Non-Interactive Mode** - Works in scripts and CI pipelines
-
-## Installation
-
-### Local
+### Installation
 
 ```bash
-npm install
-npm run build
-node dist/index.js --help
+# Install globally with Bun
+bun install -g ai-catchup
+
+# Or run directly without installing
+bunx ai-catchup
 ```
 
-### Global executable (`ai-news` on PATH)
+### Basic Usage
 
 ```bash
-npm install -g .
-ai-news --help
-ai-news --sources smol,reddit --limit 20
-```
+# Run with default settings
+ai-catchup
 
-## Usage
+# Fetch specific number of items
+ai-catchup --limit 15
 
-### Basic Commands
-
-```bash
-# Default run (uses config defaults)
-ai-news
-
-# More items
-ai-news --limit 50
-
-# Select specific sources
-ai-news --sources smol,reddit
-
-# Filter by max age (hours)
-ai-news --max-age-hours 24
+# Filter by sources (hn, reddit, x, smol)
+ai-catchup --sources hn,reddit
 
 # Bypass cache
-ai-news --no-cache
+ai-catchup --no-cache
 
-# Search/filter
-ai-news --search "Claude,agents"
+# Search/filter content
+ai-catchup --search "llm agents"
 
-# Help
-ai-news --help
+# Filter by minimum score
+ai-catchup --min-score 2.5
+
+# Filter by age
+ai-catchup --max-age-hours 48
 ```
 
-### Keyboard Controls
+## ⌨️ Keyboard Shortcuts
 
-#### News List View
+### News List View
 
-- `↑` / `↓` - Navigate through news items
-- `Enter` - Open selected article
-- `R` - Refresh news
-- `Q` - Quit application
+- `↑↓` - Navigate up/down through articles
+- `Enter`/`Space`/`o` - Open article detail view
+- `r` - Refresh news feed
+- `?` - Show help overlay
+- `q`/`Escape` - Quit application
 - `Ctrl+C` - Force quit
 
-#### Article View
+### Article Detail View
 
-- `↑` / `↓` - Scroll through content
-- `g` / `G` - Jump to top/bottom
-- `ESC` or `Q` - Go back to list
+- `↑↓`/`j`/`k` - Scroll through article content
+- `g` - Jump to top
+- `G` - Jump to bottom
+- `q`/`Escape` - Return to list view
+- `?` - Show help overlay
 - `Ctrl+C` - Force quit
 
-## Configuration
+## 📊 News Scoring
 
-Configuration is stored in `config/sources.config.json`:
+Articles are automatically scored based on:
+
+- **Recency**: More recent articles get higher scores (decay over 72 hours)
+- **Engagement**: Upvotes, comments, points
+- **Relevance**: Tags related to AI/LLMs/agents/retrieval get bonus
+
+Score range typically: 0-6+ (higher is better)
+
+## 🔧 Configuration
+
+### CLI Options
+
+| Option                 | Description                                | Default       |
+| ---------------------- | ------------------------------------------ | ------------- |
+| `-l, --limit <n>`      | Maximum news items to fetch                | 20            |
+| `-s, --sources <list>` | Comma-separated sources (hn,reddit,x,smol) | All enabled   |
+| `--no-cache`           | Bypass cache when fetching                 | Cache enabled |
+| `--max-age-hours <n>`  | Maximum age of items in hours              | 72            |
+| `--min-score <n>`      | Minimum score threshold                    | 0             |
+| `--search <query>`     | Search/filter string                       | None          |
+
+### Source Configuration
+
+Edit `config/sources.config.json` to customize sources:
 
 ```json
 {
   "cache": { "ttl": 1800000 },
-  "global": { "limit": 20, "perSourceCap": 6 },
+  "global": {
+    "limit": 20,
+    "perSourceCap": 6,
+    "hardBlock": ["funding", "hiring", "press"]
+  },
   "sources": [
     {
       "name": "smol",
-      "type": "smol",
+      "type": "rss",
       "enabled": true,
-      "feedUrl": "https://news.smol.ai/rss.xml",
+      "feedUrl": "https://news.smol.ai/feed.xml",
       "limit": 6
     },
     {
@@ -97,132 +118,101 @@ Configuration is stored in `config/sources.config.json`:
       "type": "reddit",
       "enabled": true,
       "subreddits": ["ClaudeAI", "LocalLLaMA", "MachineLearning"],
+      "minUpvotes": 75,
+      "maxAgeHours": 72,
       "limit": 6
     }
   ]
 }
 ```
 
-## Data Sources
-
-### Current Sources
-
-1. **smol.ai** - Aggregates AI news from 500+ Twitter accounts, 12 subreddits, and 24 Discord servers (daily digests)
-2. **Reddit** - Curated subreddits: ClaudeAI, LocalLLaMA, MachineLearning, OpenAI, LangChain, ArtificialInteligence, ChatGPT, Cursor, SideProject, LearnMachineLearning
-
-### Disabled Sources
-
-- **X/Twitter** - Disabled due to Twitter API changes. Public RSS feeds (Nitter instances) are blocked or return 403 errors.
-
-### Adding New Sources
-
-To add a new source:
-
-1. Create a new file in `src/sources/` (e.g., `hackernews.js`)
-2. Extend the `BaseSource` class
-3. Implement the `fetchNews()` method
-4. Register in `src/sources/index.js`
-5. Add configuration in `config/sources.config.json`
-
-Example:
-
-```javascript
-import { BaseSource } from "./base.js";
-
-export class MySource extends BaseSource {
-  constructor(config = {}) {
-    super("my-source", config);
-  }
-
-  async fetchNews() {
-    // Fetch and return news items
-    return [
-      {
-        id: "unique-id",
-        title: "Article Title",
-        description: "Summary",
-        link: "https://example.com",
-        pubDate: new Date(),
-        source: this.name,
-        tags: ["AI", "ML"],
-        content: "Full content...",
-      },
-    ];
-  }
-}
-```
-
-## Architecture
-
-```
-ai-catchup/
-├── bin/
-│   └── ai-news.js              # CLI entry point
-├── config/
-│   └── sources.config.json     # Source configurations
-├── src/
-│   ├── index.js                # CLI setup with commander
-│   ├── cli/
-│   │   └── ui/
-│   │       ├── App.js          # Main app component
-│   │       ├── NewsList.js     # News list view
-│   │       ├── ArticleView.js  # Article detail view
-│   │       └── theme.js        # UI theme constants
-│   ├── sources/                # News source adapters
-│   │   ├── base.js             # Base source class
-│   │   ├── smol.js             # smol.ai adapter
-│   │   ├── reddit.js           # Reddit adapter
-│   │   ├── hackernews.js       # Hacker News adapter
-│   │   ├── rss.js              # Generic RSS adapter
-│   │   ├── x.js                # X/Twitter adapter (disabled)
-│   │   └── index.js            # Source factory
-│   ├── services/
-│   │   ├── aggregator.js       # News aggregation & scoring
-│   │   ├── cache.js            # Caching service
-│   │   └── config.js           # Configuration management
-│   └── utils/
-├── package.json
-└── README.md
-```
-
-## Cache
-
-News items are cached locally for:
-
-- Faster loading
-- Offline access
-- Reduced API calls
-
-Cache TTL: 30 minutes (configurable in `config/sources.config.json`)
-
-## Development
+## 🛠️ Development
 
 ```bash
-# Build the project
-npm run build
+# Install dependencies
+bun install
 
 # Run in development mode
-npm run dev
+bun run dev
 
-# Run with custom options
-npm run dev -- --sources smol --limit 10
+# Build for production
+bun run build
+
+# Type check
+bun run typecheck
+
+# Lint
+bun run lint
 ```
 
-## Tech Stack
+## 🏗️ Architecture
 
-- **Node.js** - Runtime
-- **Ink** - React for CLIs
-- **Commander** - CLI framework
+```
+src/
+├── cli.tsx              # CLI entry point with commander
+├── components/
+│   ├── App.tsx        # Main application component
+│   ├── NewsList.tsx    # News list view with selection
+│   ├── ArticleView.tsx  # Article detail view with scrolling
+│   └── UI.tsx         # Reusable UI components
+├── services/
+│   ├── aggregator.ts  # News fetching & scoring
+│   ├── cache.ts       # Local cache management
+│   └── config.ts      # Configuration loading
+└── sources/
+    ├── base.ts        # Base source class & types
+    ├── rss.ts         # Generic RSS feed adapter
+    ├── hackernews.ts  # Hacker News API adapter
+    ├── reddit.ts      # Reddit API adapter
+    ├── x.ts           # X/Twitter adapter
+    ├── smol.ts        # SmolAI RSS adapter
+    └── index.ts       # Source factory
+```
+
+## 🎨 UI Components
+
+The app uses **OpenTUI** - a modern React-based terminal UI framework built specifically for Bun:
+
+- `box` - Container component with borders, padding, flexbox layout
+- `text` - Text rendering with colors (`fg`), bold (`<b>`/`<strong>`), dim
+- `<span>` - Inline text styling
+- `<br>` - Line breaks
+- `<a>` - Links
+- `useKeyboard` - Hook for keyboard event handling
+
+## 📦 Tech Stack
+
+- **Runtime**: Bun (JavaScript runtime with native bundling)
+- **UI Framework**: OpenTUI (@opentui/react) - React for terminals
+- **Language**: TypeScript (strict mode)
+- **HTTP Client**: Axios
+- **Date Formatting**: date-fns
+- **Feed Parsing**: rss-parser
+- **CLI Framework**: Commander
+
+## 🔄 Migration from v1.0
+
+This is a complete rewrite using OpenTUI instead of Ink:
+
+- ✅ **Better performance** - Native Bun runtime, faster rendering
+- ✅ **More consistent** - Single rendering engine
+- ✅ **Modern React** - Uses React 19 with latest hooks
+- ✅ **Better scrolling** - Improved scrollbox implementation
+- ✅ **Cleaner code** - TypeScript throughout
+
+The CLI interface and features remain the same - your muscle memory will work!
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) for details
+
+## 🙏️ Acknowledgments
+
+- **OpenTUI** - Beautiful TUI framework for Bun
+- **ralph-tui** - Inspiration for OpenTUI patterns and beautiful UI design
+- **React 19** - UI component model
 - **rss-parser** - RSS feed parsing
-- **axios** - HTTP client
-- **chalk** - Terminal styling
-- **date-fns** - Date formatting
-- **node-cache** - In-memory caching
+- **date-fns** - Date formatting utilities
+- **Bun** - All-in-one JavaScript runtime and toolchain
 
-## License
-
-MIT
-
-## Contributing
-
-Contributions welcome! Please feel free to submit a Pull Request.
+Built with ❤️ for developers who love staying updated on AI!
